@@ -133,7 +133,10 @@ export class Gateway {
           return res.status(400).json({ error: 'Missing required fields (tenant_id, session_id, message.content)' });
         }
 
-        const dedupKey = `${payload.tenant_id}:${payload.session_id}:${payload.user_identifier}:${payload.message.content}`;
+        const cleanUser = (payload.user_identifier || '').replace(/[^0-9]/g, '') || payload.user_identifier;
+        const cleanContent = (payload.message.content || '').trim().toLowerCase();
+        const dedupKey = `${payload.tenant_id}:${cleanUser}:${cleanContent}`;
+
         if (this.isDuplicateMessage(dedupKey)) {
           console.warn(`[Gateway] Duplicate message ignored for key [${dedupKey}]`);
           return res.status(200).json({ status: 'ignored', reason: 'duplicate_request' });
